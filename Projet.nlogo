@@ -88,6 +88,8 @@ to setup-bees
     set no-discovery? false
     set on-food? false
     set piping? false
+    set next-task inspect-hive-task
+    set task-string "inspect-hive"
   ]
   ; assigning some of the scouts to be initial scouts.
   ; bee-timer here determines how long they will wait
@@ -248,7 +250,6 @@ to take-off
     ]
   ]
 end
-
 
 
 
