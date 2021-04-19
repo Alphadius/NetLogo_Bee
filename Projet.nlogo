@@ -35,18 +35,24 @@ bees-own[
 ]
 
 globals[
+  color-list
   quality-list
   watch-dance-task
   take-off-task
+  discover-task
+  inspect-hive-task
+  go-home-task
 ]
 
 to setup
   clear-all
   setup-foods
+  setup-tasks
   setup-bees
 end
 
 to setup-foods
+  set color-list [ 97.9 94.5 57.5 63.8 17.6 14.9 27.5 25.1 117.9 114.4 ]
   set quality-list [ 100 75 50 1 54 48 40 32 24 16 ]
   ask n-of foods-number patches with [
     distancexy 0 0 > 16 and abs pxcor < (max-pxcor - 2) and
@@ -82,6 +88,8 @@ to setup-bees
     set no-discovery? false
     set on-food? false
     set piping? false
+    set next-task inspect-hive-task
+    set task-string "inspect-hive"
   ]
   ; assigning some of the scouts to be initial scouts.
   ; bee-timer here determines how long they will wait
@@ -92,20 +100,134 @@ to setup-bees
   ]
 end
 
+
+
 to setup-tasks
   ;watch-dance
-  ;discover
-  ;inspect-hive
-  ;go-home
+  inspect-hive
+  discover
+  go-home
   ;dance
   ;re-visit
   ;pipe
   take-off
 end
 
+to discover
+  set discover-task [ ->
+    ifelse bee-timer < 0 [
+      ; if run out of time (a bee has limited time to make initial
+      ; discovery), go home, and admit no discovery was made
+      set next-task go-home-task
+      set task-string "going-home"
+      set no-discovery? true
+    ] [
+      ; if a bee finds sites around it (within a distance of 3) on its way
+      ifelse count foods in-radius 3 > 0 [
+        ; then randomly choose one to focus on
+        let temp-target one-of foods in-radius 3
+        ; if this one hive was not discovered by other bees previously
+        ifelse not [discovered?] of temp-target [
+          ; commit to this hive
+          set target temp-target
+          ask target [
+            ; make the target as discovered
+            set discovered? true
+            set color item who color-list
+          ]
+          ; collect info about the target
+          set interest [ quality ] of target
+          ; the bee changes its color to show its commitment to this hive
+          set color [ color ] of target
+          set next-task inspect-hive-task
+          set task-string "inspecting-hive"
+          ; will inspect the target for 100 ticks
+          set bee-timer 100
+        ] [
+          ; if no hive site is around, keep going forward
+          ; with a random heading between [-60, 60] degrees
+          rt (random 60 - random 60) proceed
+          set bee-timer bee-timer - 1
+        ]
+      ] [
+        rt (random 60 - random 60) proceed
+      ]
+      set bee-timer bee-timer - 1
+    ]
+  ]
+end
+
+to inspect-hive
+  set inspect-hive-task [ ->
+    ; after spending certain time (as specified in bee-timer, see the
+    ; last comment of this task) on inspecting hives, they fly home.
+    ifelse bee-timer < 0 [
+      set next-task go-home-task
+      set task-string "going-home"
+      set on-food? false
+      set trips trips + 1
+    ] [
+      ; while on inspect-hive task,
+      if distance target > 2 [
+        face target fd 1 ; a bee flies to its target hive
+      ]
+      set on-food? true
+      ; if it counts more bees than what the quorum specifies, it starts to pipe.
+      let nearby-bees bees with [ on-food? and target = [ target ] of myself ] in-radius 3
+      if count nearby-bees > 33 [
+        set next-task go-home-task
+        set task-string "going-home"
+        set on-food? false
+        set piping? true
+      ]
+      ; this line makes the visual effect of a bee showing up and disappearing,
+      ; representing the bee checks both outside and inside of the hive
+      ifelse random 3 = 0 [ hide-turtle ] [ show-turtle ]
+      ; a bee knows how far this hive is from its swarm
+      set dist-to-hive distancexy 0 0
+      ; the bee-timer keeps track of how long the bee has been inspecting
+      ; the hive. It lapses as the model ticks. it is set in either the
+      ; discover task (100 ticks) or the re-visit task (50 ticks).
+      set bee-timer bee-timer - 1
+    ]
+  ]
+end
+
+to go-home
+  set go-home-task [ ->
+    ifelse distance my-home < 1 [ ; if back at home
+      ifelse no-discovery? [
+        ; if the bee is an initial scout that failed to discover a hive site
+        ;set next-task watch-dance-task
+        ;set task-string "watching-dance"
+        set no-discovery? false
+        ; it loses its initial scout status and becomes a
+        ; non-scout, who watches other bees' dances
+        set initial-scout? false
+      ] [
+        ;ifelse piping? [
+          ; if the bee saw enough bees on the target site,
+          ; it prepares to pipe for 20 ticks
+          ;set next-task pipe-task
+          ;set task-string "piping"
+          ;set bee-timer 20
+        ;] [
+          ; if it didn't see enough bees on the target site,
+          ; it prepares to dance to advocate it. it resets
+          ; the bee-timer to 0 for the dance task
+         ; set next-task dance-task
+          ;set task-string "dancing"
+          ;set bee-timer 0
+        ;]
+      ]
+    ] [
+      face my-home proceed
+    ]
+  ]
+end
 
 to go
-  ask bees [ move-around ]
+  ask bees [ run next-task ]
 end
 
 to proceed
@@ -128,10 +250,6 @@ to take-off
     ]
   ]
 end
-
-
-
-
 
 
 
@@ -196,10 +314,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-111
-206
-174
-239
+53
+451
+166
+492
 NIL
 setup
 NIL
@@ -213,10 +331,10 @@ NIL
 1
 
 BUTTON
-44
-328
-107
-361
+49
+514
+169
+557
 NIL
 go
 T
