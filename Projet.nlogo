@@ -104,8 +104,8 @@ end
 
 to setup-tasks
   ;watch-dance
-  discover
   inspect-hive
+  discover
   go-home
   ;dance
   ;re-visit
@@ -250,7 +250,6 @@ to take-off
     ]
   ]
 end
-
 
 
 

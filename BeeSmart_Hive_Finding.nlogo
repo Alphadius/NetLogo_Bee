@@ -681,10 +681,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count scouts with [piping?]"
 
 PLOT
-942
-222
-1252
-426
+331
+592
+641
+796
 on-site
 NIL
 NIL
@@ -698,10 +698,10 @@ false
 PENS
 
 PLOT
-942
-426
-1252
-579
+663
+611
+973
+764
 watching v.s. working
 NIL
 NIL
@@ -717,10 +717,10 @@ PENS
 "working bees" 1.0 0 -7025278 true "" "plot count scouts - count scouts with [task-string = \"watching-dance\"]"
 
 PLOT
-942
-10
-1252
-222
+5
+585
+315
+797
 committed
 NIL
 NIL
