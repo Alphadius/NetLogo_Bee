@@ -343,9 +343,7 @@ to dance
       set label quality
       ;print "la quality piping"
       ;print quality
-      ]
-     ]
-     [
+    ] [
       if bee-timer > interest - (trips - 1) * (15 + random 5) and interest > 0 [
         ;print word "dance re-visit interest > 0 " interest
         ; if a bee dances longer than its current interest, and if it's still
